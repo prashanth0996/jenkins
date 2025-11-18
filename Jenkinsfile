@@ -48,8 +48,14 @@ pipeline {
             steps {
                 sh """
                     echo "The Deploy Started"
-                    cd target/
-                    ls
+                    cd javaapp-pipeline/target
+                    if pgrep -f 'java -jar java-sample-21-1.0.0.jar' > /dev/null; then
+                    	pkill -f 'java -jar java-sample-21-1.0.0.jar'
+                        echo 'Old build was still running, killed and started new build'
+                    else
+                    	echo 'App was not running'
+                    fi
+                    BUILD_ID=dontKillMe nohup java -jar java-sample-21-1.0.0.jar > app.log 2>&1 &
                     echo "Deployed completed"
                 """
             }
