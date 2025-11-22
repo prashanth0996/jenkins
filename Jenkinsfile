@@ -1,6 +1,53 @@
 pipeline {
     agent any
 
+    parameters {
+        activeChoice(
+            name: 'Region',
+            choiceType: 'PT_RADIO',
+            script: [
+                $class: 'GroovyScript',
+                script: [
+                    script: 'return ["Prod", "Dev"]'
+                ]
+            ]
+        )
+
+        reactiveChoice(
+            name: 'Stages',
+            choiceType: 'PT_CHECKBOX',
+            script: [
+                $class: 'GroovyScript',
+                script: [
+                    script: '''
+                        if (Region.equals('Prod')) {
+                            return ['SonarQube Analysis', 'Store Artifacts', 'Aproval for deployment']
+                        } else if (Region.equals('Dev')) {
+                            return ['Testing', 'SonarQube Analysis']
+                        } else {
+                            return ['No tests available']
+                        }
+                    '''
+                ]
+            ],
+            referencedParameters: 'Region'
+        )
+        
+        activeChoiceHtml(
+            name: 'Validation_msg',
+            choiceType: 'ET_FORMATTED_HTML',
+            script: [
+                $class: 'GroovyScript',
+                script: [
+                    script: '''
+                        return "<div style='padding:10px; background:#e3f2fd; border:2px solid #2196F3;'><b>Type:</b> " + Region + "<br><b>Tests:</b> " + Stages + "</div>"
+                    '''
+                ]
+            ],
+            referencedParameters: 'Region,Stages'
+        )
+    }
+    
     stages {
         stage('Checkout') {
             steps {
