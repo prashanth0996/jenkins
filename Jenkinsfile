@@ -50,7 +50,7 @@ pipeline {
                     serverId: 'Jfrog',
                     spec: '''{
                         "files": [{
-                            "pattern": "javaapp-pipeline/target/*.war",
+                            "pattern": "javaapp-pipeline/target/*.*ar",
                             "target": "myorg-local/2.${BUILD_NUMBER}/"
                         }]
                     }'''
