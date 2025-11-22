@@ -40,6 +40,23 @@ pipeline {
                 }
             }
         }
+
+        stage('Upload to Artifactory') {
+            when {
+                branch 'master'
+            }
+            steps {
+               rtUpload(
+                    serverId: 'Jfrog',
+                    spec: '''{
+                        "files": [{
+                            "pattern": "javaapp-pipeline/target/*.war",
+                            "target": "myorg-local/2.${BUILD_NUMBER}/"
+                        }]
+                    }'''
+                )
+            }
+        }
         
         stage('Manual Approval') {
             when {
