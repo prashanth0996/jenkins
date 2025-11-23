@@ -142,7 +142,7 @@ when {
      when {
     allOf {
       branch 'master'
-      expression { params.File_Category == 'javaapp-tomcat' }
+      expression { params.File_Category == 'javaapp-tomcat' , 'javaapp-pipeline' }
     }
   }
       steps {
