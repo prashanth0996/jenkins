@@ -93,7 +93,7 @@ pipeline {
                         steps {
                 withSonarQubeEnv('Sonar') {
                     sh '''
-                        cd ${folder} && pwd
+                        cd ${params.File_Category} && pwd
                         mvn clean verify sonar:sonar \
                         -Dsonar.projectKey=java \
                         -Dsonar.projectName=java 
@@ -124,7 +124,7 @@ stage ('Deploy') {
 	steps {
         sh """
         echo "The Deploy Started"
-        cd ${folder}/target
+        cd ${params.File_Category}/target
 	sudo cp *.*ar /opt/tomcat/webapps/
 	echo "Deployed completed"
           """
