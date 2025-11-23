@@ -89,6 +89,12 @@ pipeline {
     }
 
     stage('Code Analysis') {
+    when {
+    allOf {
+      branch 'master'
+      expression { params.File_Category == 'javaapp-pipeline' }
+      }
+      }
       steps {
         withSonarQubeEnv('Sonar') {
           sh """
@@ -114,7 +120,7 @@ when {
 	}
 	}
 
-    stage('Deploy Standalone') {
+ stage('Deploy Standalone') {
       when {
     allOf {
       branch 'master'
@@ -131,7 +137,7 @@ when {
         """
       }
     }
-
+     
     stage('Deploy Tomcat') {
      when {
     allOf {
