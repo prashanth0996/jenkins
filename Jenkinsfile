@@ -59,7 +59,7 @@ pipeline {
             steps {
                 sh """
                     echo "The Test Started"
-                    cd javaapp-pipeline/
+                    cd javaapp-tomcat/
                     mvn clean test
                 """
             }
@@ -69,7 +69,7 @@ pipeline {
             steps {
                 sh """
                     echo "The Build Started"
-                    cd javaapp-pipeline/
+                    cd javaapp-tomcat/
                     mvn clean package
                 """
             }
@@ -82,7 +82,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonar') {
                     sh '''
-                        cd javaapp-pipeline && pwd
+                        cd javaapp-tomcat && pwd
                         mvn clean verify sonar:sonar \
                         -Dsonar.projectKey=java \
                         -Dsonar.projectName=java 
@@ -116,7 +116,7 @@ pipeline {
                     serverId: 'Jfrog',
                     spec: '''{
                         "files": [{
-                            "pattern": "javaapp-pipeline/target/*.*ar",
+                            "pattern": "javaapp-tomcat/target/*.*ar",
                             "target": "myorg-local/2.${BUILD_NUMBER}/"
                         }]
                     }'''
