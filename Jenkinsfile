@@ -21,9 +21,9 @@ pipeline {
                 script: [
                     script: '''
                         if (Region.equals('Prod')) {
-                            return ['SonarQube Analysis', 'Store Artifacts', 'Aproval for deployment']
+                            return ['SonarQube Analysis', 'Store Artifacts', 'Approval for deployment']
                         } else if (Region.equals('Dev')) {
-                            return ['Testing', 'SonarQube Analysis']
+                            return ['SonarQube Analysis']
                         } else {
                             return ['No tests available']
                         }
@@ -51,7 +51,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/rajashekar736j/jenkins.git'
+                git url: 'https://github.com/xxxxx/jenkins.git'
             }
         }
         
@@ -76,6 +76,9 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
+            when {
+                expression { params.Stages?.contains('SonarQube Analysis') }
+            }
             steps {
                 withSonarQubeEnv('sonar') {
                     sh '''
@@ -88,9 +91,12 @@ pipeline {
             }
         }
 
-        stage('Upload to Artifactory') {
+        stage('Push to Artifactory') {
             when {
-                branch 'master'
+                allOf {
+                    branch 'master'
+                    expression { params.Stages?.contains('Store Artifacts') }
+                }
             }
             steps {
                rtUpload(
@@ -105,9 +111,12 @@ pipeline {
             }
         }
         
-        stage('Manual Approval') {
+        stage('Approvals') {
             when {
-                branch 'master'
+                allOf {
+                    branch 'master'
+                    expression { params.Stages?.contains('Approval for deployment') }
+                }
             }
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
@@ -118,7 +127,7 @@ pipeline {
             }
         }
         
-        stage('Deploy') {
+        stage('Deploy to Prod') {
             when {
                 branch 'master'
             }
@@ -127,10 +136,10 @@ pipeline {
                     echo "The Deploy Started"
                     cd javaapp-pipeline/target
                     if pgrep -f 'java -jar java-sample-21-1.0.0.jar' > /dev/null; then
-                    	pkill -f 'java -jar java-sample-21-1.0.0.jar'
+                        pkill -f 'java -jar java-sample-21-1.0.0.jar'
                         echo 'Old build was still running, killed and started new build'
                     else
-                    	echo 'App was not running'
+                        echo 'App was not running'
                     fi
                     BUILD_ID=dontKillMe nohup java -jar java-sample-21-1.0.0.jar > app.log 2>&1 &
                     echo "Deployed completed"
