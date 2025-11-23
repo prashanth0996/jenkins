@@ -88,19 +88,17 @@ pipeline {
       }
     }
 
-  stage('Code Analysis') {
-
-                        steps {
-                withSonarQubeEnv('Sonar') {
-                    sh '''
-                        cd ${params.File_Category} && pwd
-                        mvn clean verify sonar:sonar \
-                        -Dsonar.projectKey=java \
-                        -Dsonar.projectName=java 
-                    '''
-                }
-            }
-        }
+   stage('Code Analysis') {
+	steps{
+ 	withSonarQubeEnv('Sonar'){
+	sh """
+	  cd ${params.File_Category}
+        mvn clean verify sonar:sonar  -Dsonar.projectKey='JOB2' -Dsonar.projectName='JOB2' 
+       
+	   """
+	}
+	}
+	}
 
   stage ('Manual Approval' ) {
 
