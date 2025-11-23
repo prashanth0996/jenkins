@@ -114,7 +114,7 @@ stage('Upload to Artifactory') {
                     serverId: 'Jfrog',
                     spec: '''{
                         "files": [{
-                            "pattern": "cd ${params.File_Category}/target/*.*ar",
+                            "pattern": "${params.File_Category}/target/*.*ar"
                             "target": "Maven/2.${BUILD_NUMBER}/"
                         }]
                     }'''
