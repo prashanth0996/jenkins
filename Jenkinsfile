@@ -152,7 +152,7 @@ pipeline {
                 sh """
                     echo "The Deployment Started"
                     cd javaapp-tomcat/target
-            	    sudo scp -o StrictHostKeyChecking=no artisantek-app.war root@13.203.74.192:/opt/tomcat/latest/webapps/
+            	    sudo scp -o StrictHostKeyChecking=no artisantek-app.war root@13.203.231.229:/opt/tomcat/latest/webapps/
             	    echo "Deployment completed"
                   """
             }
