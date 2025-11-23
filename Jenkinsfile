@@ -139,13 +139,13 @@ when {
     }
      
     stage('Deploy Tomcat') {
-     when {
-    allOf {
-      branch 'master'
-      expression { params.File_Category == 'javaapp-tomcat' , 'javaapp-pipeline' }
-    }
+ when {
+  allOf {
+    branch 'master'
+    expression { params.File_Category == 'javaapp-tomcat' || params.File_Category == 'javaapp-pipeline' }
   }
-      steps {
+}
+    steps {
         sh """
           echo "The Deploy Started"
           cd ${params.File_Category}/target
