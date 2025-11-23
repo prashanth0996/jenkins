@@ -1,0 +1,127 @@
+pipeline {
+  agent none
+
+  parameters {
+    choice(
+      name: 'File_Category',
+      choices: ['javaapp-pipeline', 'javaapp-standalone', 'javaapp-tomcat'],
+      description: 'Choose a file category (folder)'
+    )
+    choice(
+      name: 'SelectedTests',
+      choices: ['jar', 'war'],
+      description: 'Select file types for this category'
+    )
+    string(
+      name: 'SummaryMessage',
+      defaultValue: '',
+      description: 'Summary of your selections'
+    )
+  }
+
+  stages {
+    stage('Checkout') {
+      agent { label 'node1' }
+      steps {
+        git 'https://github.com/prashanth0996/jenkins.git'
+      }
+    }
+    stage('Test') {
+      agent { label 'node1' }
+      steps {
+        sh "cd ${params.File_Category} && mvn clean test"
+      }
+    }
+    stage('Build') {
+      agent { label 'node1' }
+      steps {
+        sh "cd ${params.File_Category} && mvn clean package -DskipTests"
+      }
+    }
+    stage('Code Analysis') {
+      agent { label 'node1' }
+      when {
+        allOf {
+          branch 'master'
+          expression { params.File_Category == 'javaapp-pipeline' }
+        }
+      }
+      steps {
+        withSonarQubeEnv('sonar') {
+          sh "cd ${params.File_Category} && mvn clean verify sonar:sonar -Dsonar.projectKey=java -Dsonar.projectName=java"
+        }
+      }
+    }
+    stage('Manual Approval') {
+      agent { label 'node2' }
+      when {
+        branch 'master'
+      }
+      options {
+        timeout(time: 1, unit: 'MINUTES')
+      }
+      steps {
+        input 'Approval for the Deploy'
+      }
+    }
+    stage('Upload to Artifactory') {
+      agent { label 'node2' }
+      when {
+        branch 'master'
+      }
+      steps {
+        sh "ls -l ${params.File_Category}/target/"
+        rtUpload(
+          serverId: 'Jfrog',
+          spec: """
+          {
+            "files": [{
+              "pattern": "${params.File_Category}/target/*.*ar",
+              "target": "Maven/2.${env.BUILD_NUMBER}/"
+            }]
+          }
+          """
+        )
+      }
+    }
+    stage('Deploy Standalone') {
+      agent { label 'node2' }
+      when {
+        allOf {
+          branch 'master'
+          expression { params.File_Category == 'javaapp-standalone' }
+        }
+      }
+      steps {
+        sh """
+          cd ${params.File_Category}/target
+          JENKINS_NODE_COOKIE=dontKillMe nohup java -jar java-sample-21-1.0.0.jar > out.log 2>&1 &
+          sudo netstat -tulnp | grep 5000 || echo "Deployment check completed"
+        """
+      }
+    }
+    stage('Deploy Tomcat') {
+      agent { label 'node2' }
+      when {
+        allOf {
+          branch 'master'
+          expression { params.File_Category == 'javaapp-tomcat' || params.File_Category == 'javaapp-pipeline' }
+        }
+      }
+      steps {
+        sh """
+          cd ${params.File_Category}/target
+          sudo cp *.*ar /opt/tomcat/webapps/
+          echo "Deployed completed"
+        """
+      }
+    }
+  }
+
+  post {
+    always {
+      echo "Clean the work space after post build"
+      cleanWs()
+    }
+  }
+}
