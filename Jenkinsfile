@@ -129,7 +129,10 @@ pipeline {
         
         stage('Deploy to Prod') {
             when {
-                branch 'master'
+                allOf {
+                    branch 'master'
+                    expression { params.Region == 'Prod' }
+                }
             }
             steps {
                 sh """
@@ -149,7 +152,10 @@ pipeline {
         
         stage('Deploy to Dev') {
             when {
-                branch 'dev'
+                anyOf {
+                    branch 'dev'
+                    expression { params.Region == 'Dev' }
+                }
             }
             steps {
                 echo 'Dev branch - skipping deployment'
