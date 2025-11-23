@@ -105,6 +105,10 @@ when {
 	}
 	}
 
+
+sh "ls -l ${params.File_Category}/target/"
+
+
 stage('Upload to Artifactory') {
     when {
         branch 'master'
@@ -115,7 +119,6 @@ stage('Upload to Artifactory') {
                     spec: '''{
                         "files": [{
                             "pattern": "${params.File_Category}/target/*.*ar"
-							"ls -l ${params.File_Category}/target/"
                             "target": "Maven/2.${BUILD_NUMBER}/"
                         }]
                     }'''
