@@ -106,14 +106,12 @@ when {
 	}
 
 
-sh "ls -l ${params.File_Category}/target/"
-
-
 stage('Upload to Artifactory') {
     when {
         branch 'master'
           }
               steps {
+				  sh "ls -l ${params.File_Category}/target/"
                 rtUpload(
                     serverId: 'Jfrog',
                     spec: '''{
