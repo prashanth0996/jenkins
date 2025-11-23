@@ -84,12 +84,8 @@ stage('Code Analysis') {
 
                         steps {
                 withSonarQubeEnv('sonar') {
-                    sh '''
-                         cd ${folder} && pwd
-                        mvn clean verify sonar:sonar \
-                        -Dsonar.projectKey=java \
-                        -Dsonar.projectName=java 
-                    '''
+               sh "cd ${params.File_Category} && mvn clean verify sonar:sonar -Dsonar.projectKey=java -Dsonar.projectName=java"
+
                 }
             }
         }
