@@ -75,7 +75,7 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('Code Analysis') {
             when {
                 expression { params.Stages?.contains('SonarQube Analysis') }
             }
@@ -88,6 +88,19 @@ pipeline {
                         -Dsonar.projectName=java 
                     '''
                 }
+            }
+        }
+
+        stage('Deploy to Dev') {
+            when {
+                anyOf {
+                    branch 'dev'
+                    expression { params.Region == 'Dev' }
+                }
+            }
+            steps {
+                echo 'Dev branch - skipping deployment'
+                echo 'Build and tests completed successfully'
             }
         }
 
@@ -128,6 +141,7 @@ pipeline {
         }
         
         stage('Deploy to Prod') {
+            agent { label 'Agent1' }
             when {
                 allOf {
                     branch 'master'
@@ -136,32 +150,14 @@ pipeline {
             }
             steps {
                 sh """
-                    echo "The Deploy Started"
-                    cd javaapp-pipeline/target
-                    if pgrep -f 'java -jar java-sample-21-1.0.0.jar' > /dev/null; then
-                        pkill -f 'java -jar java-sample-21-1.0.0.jar'
-                        echo 'Old build was still running, killed and started new build'
-                    else
-                        echo 'App was not running'
-                    fi
-                    BUILD_ID=dontKillMe nohup java -jar java-sample-21-1.0.0.jar > app.log 2>&1 &
-                    echo "Deployed completed"
-                """
+                    echo "The Deployment Started"
+                    cd javaapp-tomcat/target
+            	    sudo scp -o StrictHostKeyChecking=no artisantek-app.war root@13.203.74.192:/opt/tomcat/latest/webapps/
+            	    echo "Deployment completed"
+                  """
             }
         }
         
-        stage('Deploy to Dev') {
-            when {
-                anyOf {
-                    branch 'dev'
-                    expression { params.Region == 'Dev' }
-                }
-            }
-            steps {
-                echo 'Dev branch - skipping deployment'
-                echo 'Build and tests completed successfully'
-            }
-        }
     }
   
     post {
