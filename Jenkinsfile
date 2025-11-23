@@ -23,13 +23,13 @@ pipeline {
         script: [
           script: '''
             if (File_Category.equals('javaapp-pipeline')) {
-                return ['jar', 'war', 'ear']
+              return [ 'war' ]
             } else if (File_Category.equals('javaapp-standalone')) {
-                return ['jar', 'war', 'ear']
+              return ['jar']
             } else if (File_Category.equals('javaapp-tomcat')) {
-                return ['jar', 'war', 'ear']
+              return [ 'war']
             } else {
-                return ['No tests available']
+              return ['No tests available']
             }
           '''
         ]
@@ -88,22 +88,28 @@ pipeline {
       }
     }
 
-   stage('Code Analysis') {
-	steps{
- 	withSonarQubeEnv('Sonar'){
-	sh """
-	  cd ${params.File_Category}
-        mvn clean verify sonar:sonar  -Dsonar.projectKey='JOB2' -Dsonar.projectName='JOB2' 
-       
-	   """
-	}
-	}
-	}
+    stage('Code Analysis') {
+    when {
+    allOf {
+      branch 'master'
+      expression { params.File_Category == 'javaapp-pipeline' }
+      }
+      }
+      steps {
+        withSonarQubeEnv('Sonar') {
+          sh """
+            cd ${params.File_Category}
+            mvn clean verify sonar:sonar -Dsonar.projectKey='JOB2' -Dsonar.projectName='JOB2' 
+          """
+        }
+      }
+    }
 
-  stage ('Manual Approval' ) {
+
+stage ('Manual Approval' ) {
 
 when {
-        branch 'main'
+        branch 'master'
           }
 
      options{ 
@@ -114,23 +120,41 @@ when {
 	}
 	}
 
-
-stage ('Deploy') {
- when {
-        branch 'main'
-          }
-	steps {
+ stage('Deploy Standalone') {
+      when {
+    allOf {
+      branch 'master'
+      expression { params.File_Category == 'javaapp-standalone' }
+    }
+  }
+      steps {
         sh """
-        echo "The Deploy Started"
-        cd ${params.File_Category}/target
-	sudo cp *.*ar /opt/tomcat/webapps/
-	echo "Deployed completed"
-          """
-	}
-	}
- }
-
-
+          echo "The Deploy is started"
+          pwd
+          cd ${params.File_Category}/target
+          JENKINS_NODE_COOKIE=dontKillMe nohup java -jar java-sample-21-1.0.0.jar > out.log 2>&1 &
+          sudo netstat -tulnp | grep 5000 || echo "Deployment check completed"
+        """
+      }
+    }
+     
+    stage('Deploy Tomcat') {
+ when {
+  allOf {
+    branch 'master'
+    expression { params.File_Category == 'javaapp-tomcat' || params.File_Category == 'javaapp-pipeline' }
+  }
+}
+    steps {
+        sh """
+          echo "The Deploy Started"
+          cd ${params.File_Category}/target
+          sudo cp *.*ar /opt/tomcat/webapps/
+          echo "Deployed completed"
+        """
+      }
+    }
+  }
 
   post {
     always {
