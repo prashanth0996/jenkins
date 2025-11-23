@@ -141,7 +141,6 @@ pipeline {
         }
         
         stage('Deploy to Prod') {
-            agent { label 'Agent1' }
             when {
                 allOf {
                     branch 'master'
@@ -151,7 +150,7 @@ pipeline {
             steps {
                 sh """
                     echo "The Deployment Started" && pwd && ls
-                    sudo cd /var/lib/jenkins/workspace/jenkins_multibranch_master/javaapp-tomcat/target
+                    sudo cd javaapp-tomcat/target
             	    sudo scp -o StrictHostKeyChecking=no artisantek-app.war root@13.203.231.229:/opt/tomcat/latest/webapps/
             	    echo "Deployment completed"
                   """
