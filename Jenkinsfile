@@ -81,10 +81,15 @@ pipeline {
     }
 
 stage('Code Analysis') {
-
-                        steps {
-                withSonarQubeEnv('sonar') {
-               sh "cd ${params.File_Category} && mvn clean verify sonar:sonar -Dsonar.projectKey=java -Dsonar.projectName=java"
+when {
+    allOf {
+      branch 'master'
+      expression { params.File_Category == 'javaapp-pipeline' }
+      }
+      }
+      steps {
+       withSonarQubeEnv('sonar') {
+       sh "cd ${params.File_Category} && mvn clean verify sonar:sonar -Dsonar.projectKey=java -Dsonar.projectName=java"
 
                 }
             }
