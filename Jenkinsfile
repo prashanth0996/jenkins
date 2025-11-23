@@ -23,7 +23,7 @@ pipeline {
         script: [
           script: '''
             if (File_Category.equals('javaapp-pipeline')) {
-              return [ 'war' ]
+              return [ 'jar' , 'war' ]
             } else if (File_Category.equals('javaapp-standalone')) {
               return ['jar']
             } else if (File_Category.equals('javaapp-tomcat')) {
@@ -60,14 +60,6 @@ pipeline {
       }
     }
 
-    stage('Show Parameters') {
-      steps {
-        echo "Folder selected: ${params.File_Category}"
-        echo "File types selected: ${params.SelectedTests}"
-        echo "Summary: ${params.SummaryMessage}"
-      }
-    }
-
     stage('Test') {
       steps {
         sh """
@@ -88,22 +80,20 @@ pipeline {
       }
     }
 
-    stage('Code Analysis') {
-    when {
+stage('Code Analysis') {
+when {
     allOf {
       branch 'master'
       expression { params.File_Category == 'javaapp-pipeline' }
       }
       }
       steps {
-        withSonarQubeEnv('Sonar') {
-          sh """
-            cd ${params.File_Category}
-            mvn clean verify sonar:sonar -Dsonar.projectKey='JOB2' -Dsonar.projectName='JOB2' 
-          """
+       withSonarQubeEnv('sonar') {
+       sh "cd ${params.File_Category} && mvn clean verify sonar:sonar -Dsonar.projectKey=java -Dsonar.projectName=java"
+
+                }
+            }
         }
-      }
-    }
 
 
 stage ('Manual Approval' ) {
@@ -119,6 +109,28 @@ when {
        input 'Approval for the Deploy'
 	}
 	}
+
+
+stage('Upload to Artifactory') {
+    when {
+        branch 'master'
+    }
+    steps {
+        sh "ls -l ${params.File_Category}/target/"
+        rtUpload(
+            serverId: 'Jfrog',
+            spec: """
+            {
+                "files": [{
+                    "pattern": "${params.File_Category}/target/*.*ar",
+                    "target": "Maven/2.${env.BUILD_NUMBER}/"
+                }]
+            }
+            """
+        )
+    }
+}
+
 
  stage('Deploy Standalone') {
       when {
