@@ -103,7 +103,7 @@ pipeline {
   stage ('Manual Approval' ) {
 
 when {
-        branch 'main'
+        branch 'master'
           }
 
      options{ 
@@ -117,7 +117,7 @@ when {
 
 stage ('Deploy') {
  when {
-        branch 'main'
+        branch 'master'
           }
 	steps {
         sh """
