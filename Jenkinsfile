@@ -109,20 +109,22 @@ when {
 stage('Upload to Artifactory') {
     when {
         branch 'master'
-          }
-              steps {
-				  sh "ls -l ${params.File_Category}/target/"
-                rtUpload(
-                    serverId: 'Jfrog',
-                    spec: '''{
-                        "files": [{
-                            "pattern": "${params.File_Category}/target/*.*ar"
-                            "target": "Maven/2.${BUILD_NUMBER}/"
-                        }]
-                    }'''
-                )
+    }
+    steps {
+        sh "ls -l ${params.File_Category}/target/"
+        rtUpload(
+            serverId: 'Jfrog',
+            spec: """
+            {
+                "files": [{
+                    "pattern": "${params.File_Category}/target/*.*ar",
+                    "target": "Maven/2.${env.BUILD_NUMBER}/"
+                }]
             }
-        }  
+            """
+        )
+    }
+}
 
 
  stage('Deploy Standalone') {
